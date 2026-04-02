@@ -953,6 +953,32 @@ def send_application_to_telegram(application_id: int) -> None:
     logging.info("Telegram message sent for application #%s", application_id)
 
 
+def send_test_message_to_telegram() -> tuple[bool, str]:
+    if not telegram_enabled():
+        set_telegram_error("Telegram не настроен: отсутствует TELEGRAM_BOT_TOKEN и/или TELEGRAM_ADMIN_CHAT_ID.")
+        return False, TELEGRAM_LAST_ERROR
+
+    payload = {
+        "chat_id": TELEGRAM_ADMIN_CHAT_ID,
+        "text": f"Тестовое сообщение от сайта Mambo City\nВремя: {now_iso()}",
+    }
+    result = telegram_api_call("sendMessage", payload)
+
+    if not result:
+        if not TELEGRAM_LAST_ERROR:
+            set_telegram_error("sendMessage: пустой ответ от Telegram API.")
+        return False, TELEGRAM_LAST_ERROR
+
+    if not result.get("ok"):
+        description = str(result.get("description", "неизвестная ошибка"))
+        set_telegram_error(f"sendMessage: {description}")
+        return False, TELEGRAM_LAST_ERROR
+
+    clear_telegram_error()
+    msg = result.get("result", {})
+    return True, f"Тестовое сообщение отправлено. message_id={msg.get('message_id', 'n/a')}"
+
+
 def format_reviewed_message(row: sqlite3.Row) -> str:
     status = "ОДОБРЕНО" if row["status"] == "approved" else "ОТКЛОНЕНО"
     mod = row["decision_by"] or "неизвестно"
@@ -1077,9 +1103,22 @@ def app(environ: dict[str, Any], start_response):
             <p><strong>ID админ-чата:</strong> {escape(TELEGRAM_ADMIN_CHAT_ID or "не задан")}</p>
             <p><strong>Последняя ошибка:</strong> {escape(TELEGRAM_LAST_ERROR or "нет")}</p>
             <div class="hint">Если ошибка содержит <code>chat not found</code> или <code>bot was blocked</code>, проверь ID чата и права бота в группе.</div>
+            <p style="margin-top:14px"><a class="btn" href="/telegram-test">Отправить тестовое сообщение</a></p>
           </div>
         """
         return response(start_response, "200 OK", html_page("Диагностика Telegram", debug_body))
+
+    if path == "/telegram-test" and method == "GET":
+        ok, message = send_test_message_to_telegram()
+        css_class = "ok" if ok else "error"
+        body = f"""
+          <div class="panel">
+            <h2 style="margin-top:0">Тест Telegram</h2>
+            <div class="{css_class}">{escape(message)}</div>
+            <div class="hint">Вернуться к диагностике: <a href="/telegram-debug">/telegram-debug</a></div>
+          </div>
+        """
+        return response(start_response, "200 OK", html_page("Тест Telegram", body))
 
     if path == "/" and method == "GET":
         return response(start_response, "200 OK", home_form())
