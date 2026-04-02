@@ -308,11 +308,11 @@ def static_response(start_response, content: bytes, content_type: str):
 def html_page(title: str, body: str) -> str:
     return f"""<!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="utf-8" />
+<head> 
+  <meta charset="utf-8" /> 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{escape(title)}</title>
-  <link rel="stylesheet" href="/static/style.css?v=2" />
+  <link rel="stylesheet" href="/static/style.css?v=3" />
 </head>
 <body>
   <div class="wrap">
