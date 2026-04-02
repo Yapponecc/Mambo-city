@@ -49,6 +49,7 @@ STATIC_DIR = BASE_DIR / "static"
 
 MIN_PASS_SCORE = 5
 RESOLVED_DB_PATH = ""
+TELEGRAM_LAST_ERROR = ""
 
 INLINE_CSS = """
 :root {
@@ -766,6 +767,11 @@ def status_page(row: sqlite3.Row | None) -> str:
         note = '<div class="error">Мини‑тест не пройден. Обратись к администрации, если нужна повторная попытка.</div>'
     elif status == "pending_review":
         note = '<div class="ok">Тест пройден. Заявка ожидает решения модератора в Telegram.</div>'
+        if TELEGRAM_LAST_ERROR:
+            note += (
+                f'<div class="error">Не удалось отправить уведомление в Telegram: {escape(TELEGRAM_LAST_ERROR)}. '
+                f'Проверь TELEGRAM_BOT_TOKEN и TELEGRAM_ADMIN_CHAT_ID в Render.</div>'
+            )
     elif status == "approved":
         note = '<div class="ok">Заявка одобрена. Команда проекта свяжется с тобой в Telegram.</div>'
     elif status == "rejected":
@@ -822,8 +828,21 @@ def score_quiz(data: dict[str, str]) -> int:
     return score
 
 
+def set_telegram_error(message: str) -> None:
+    global TELEGRAM_LAST_ERROR
+    TELEGRAM_LAST_ERROR = message.strip()
+    if TELEGRAM_LAST_ERROR:
+        logging.warning("Telegram issue: %s", TELEGRAM_LAST_ERROR)
+
+
+def clear_telegram_error() -> None:
+    global TELEGRAM_LAST_ERROR
+    TELEGRAM_LAST_ERROR = ""
+
+
 def telegram_api_call(method: str, payload: dict[str, Any]) -> dict[str, Any] | None:
     if not TELEGRAM_BOT_TOKEN:
+        set_telegram_error("Не задан TELEGRAM_BOT_TOKEN.")
         return None
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/{method}"
@@ -838,7 +857,24 @@ def telegram_api_call(method: str, payload: dict[str, Any]) -> dict[str, Any] | 
         with urllib.request.urlopen(req, timeout=25) as resp:
             raw = resp.read().decode("utf-8", errors="ignore")
             return json.loads(raw)
+    except urllib.error.HTTPError as exc:
+        raw = ""
+        try:
+            raw = exc.read().decode("utf-8", errors="ignore")
+        except Exception:
+            raw = ""
+        description = raw or str(exc)
+        if raw:
+            try:
+                payload_json = json.loads(raw)
+                description = payload_json.get("description", description)
+            except json.JSONDecodeError:
+                pass
+        set_telegram_error(f"{method}: HTTP {exc.code} - {description}")
+        logging.warning("Telegram API HTTP error (%s): %s", method, description)
+        return None
     except (urllib.error.URLError, json.JSONDecodeError) as exc:
+        set_telegram_error(f"{method}: {exc}")
         logging.warning("Telegram API call failed (%s): %s", method, exc)
         return None
 
@@ -876,6 +912,7 @@ def format_application_message(row: sqlite3.Row) -> str:
 
 def send_application_to_telegram(application_id: int) -> None:
     if not telegram_enabled():
+        set_telegram_error("Telegram не настроен: отсутствует TELEGRAM_BOT_TOKEN и/или TELEGRAM_ADMIN_CHAT_ID.")
         return
 
     row = get_application(application_id)
@@ -896,13 +933,24 @@ def send_application_to_telegram(application_id: int) -> None:
         },
     }
     result = telegram_api_call("sendMessage", payload)
-    if result and result.get("ok"):
-        msg = result.get("result", {})
-        set_telegram_message_meta(
-            application_id,
-            int(msg.get("chat", {}).get("id", 0)),
-            int(msg.get("message_id", 0)),
-        )
+    if not result:
+        if not TELEGRAM_LAST_ERROR:
+            set_telegram_error("sendMessage: пустой ответ от Telegram API.")
+        return
+
+    if not result.get("ok"):
+        description = str(result.get("description", "неизвестная ошибка"))
+        set_telegram_error(f"sendMessage: {description}")
+        return
+
+    clear_telegram_error()
+    msg = result.get("result", {})
+    set_telegram_message_meta(
+        application_id,
+        int(msg.get("chat", {}).get("id", 0)),
+        int(msg.get("message_id", 0)),
+    )
+    logging.info("Telegram message sent for application #%s", application_id)
 
 
 def format_reviewed_message(row: sqlite3.Row) -> str:
@@ -1019,6 +1067,19 @@ def app(environ: dict[str, Any], start_response):
 
     if path == "/health":
         return response(start_response, "200 OK", "ok")
+
+    if path == "/telegram-debug" and method == "GET":
+        debug_body = f"""
+          <div class="panel">
+            <h2 style="margin-top:0">Диагностика Telegram</h2>
+            <p><strong>TELEGRAM_BOT_TOKEN задан:</strong> {"Да" if bool(TELEGRAM_BOT_TOKEN) else "Нет"}</p>
+            <p><strong>TELEGRAM_ADMIN_CHAT_ID задан:</strong> {"Да" if bool(TELEGRAM_ADMIN_CHAT_ID) else "Нет"}</p>
+            <p><strong>ID админ-чата:</strong> {escape(TELEGRAM_ADMIN_CHAT_ID or "не задан")}</p>
+            <p><strong>Последняя ошибка:</strong> {escape(TELEGRAM_LAST_ERROR or "нет")}</p>
+            <div class="hint">Если ошибка содержит <code>chat not found</code> или <code>bot was blocked</code>, проверь ID чата и права бота в группе.</div>
+          </div>
+        """
+        return response(start_response, "200 OK", html_page("Диагностика Telegram", debug_body))
 
     if path == "/" and method == "GET":
         return response(start_response, "200 OK", home_form())
