@@ -40,75 +40,86 @@ load_dotenv_if_present()
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8080"))
 RAW_DB_PATH = os.getenv("DB_PATH", "applications.db")
-APP_TITLE = os.getenv("APP_TITLE", "Mambo City | Staff Applications")
+APP_TITLE = os.getenv("APP_TITLE", "Mambo City | Заявка в команду")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 TELEGRAM_ADMIN_CHAT_ID = os.getenv("TELEGRAM_ADMIN_CHAT_ID", "").strip()
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").strip()
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
 
-MIN_PASS_SCORE = 4
+MIN_PASS_SCORE = 5
 RESOLVED_DB_PATH = ""
 
 QUIZ_QUESTIONS = [
     {
         "id": "q1",
-        "question": "Can you use cheats/macros/xray on the server?",
+        "question": "Можно ли использовать читы/макросы/xray на сервере?",
         "options": [
-            ("a", "No, any cheats or unfair advantage are forbidden."),
-            ("b", "Yes, if I do it only sometimes."),
-            ("c", "Yes, if nobody notices."),
+            ("a", "Нет, любые читы и нечестное преимущество запрещены."),
+            ("b", "Можно, если редко."),
+            ("c", "Можно, если никто не увидит."),
         ],
         "correct": "a",
     },
     {
         "id": "q2",
-        "question": "What is the right behavior in chat?",
+        "question": "Как нужно вести себя в чате?",
         "options": [
-            ("a", "Spam and insults are okay."),
-            ("b", "Keep respectful communication, no hate/harassment."),
-            ("c", "Only admins must be respectful."),
+            ("a", "Спам и оскорбления допустимы."),
+            ("b", "Общаться уважительно, без травли и оскорблений."),
+            ("c", "Уважительно должны общаться только админы."),
         ],
         "correct": "b",
     },
     {
         "id": "q3",
-        "question": "Can you destroy or steal other players' builds/items?",
+        "question": "Можно ли ломать или воровать вещи/постройки других игроков?",
         "options": [
-            ("a", "No, griefing/theft are forbidden."),
-            ("b", "Yes, if I am strong enough."),
-            ("c", "Yes, only in protected zones."),
+            ("a", "Нет, гриф и воровство запрещены."),
+            ("b", "Да, если получится."),
+            ("c", "Да, только в приватах."),
         ],
         "correct": "a",
     },
     {
         "id": "q4",
-        "question": "Can you advertise other projects/servers in chat?",
+        "question": "Можно ли рекламировать другие проекты/сервера в чате?",
         "options": [
-            ("a", "Yes, all ads are welcome."),
-            ("b", "Only if I ask random players first."),
-            ("c", "No, external ads are not allowed without admin approval."),
+            ("a", "Да, любая реклама приветствуется."),
+            ("b", "Да, если сначала спросить игроков."),
+            ("c", "Нет, без согласования с администрацией нельзя."),
         ],
         "correct": "c",
     },
     {
         "id": "q5",
-        "question": "You found a bug/exploit. What should you do?",
+        "question": "Вы нашли баг/эксплойт. Что нужно сделать?",
         "options": [
-            ("a", "Use it for personal gain."),
-            ("b", "Report it to staff/admin."),
-            ("c", "Sell it to other players."),
+            ("a", "Использовать в свою пользу."),
+            ("b", "Сообщить администрации/модерации."),
+            ("c", "Продать информацию другим игрокам."),
         ],
         "correct": "b",
+    },
+    {
+        "id": "q6",
+        "question": "На каком расстоянии от спавна можно начинать строительство базы?",
+        "options": [
+            ("a", "Только от 1000 блоков от спавна."),
+            ("b", "Можно прямо у спавна."),
+            ("c", "Достаточно 100 блоков от спавна."),
+        ],
+        "correct": "a",
     },
 ]
 
 RULES_SUMMARY = [
-    "No cheats, xray, macros, dupes, or any unfair advantage.",
-    "Respect players and staff in chat and gameplay.",
-    "No griefing, theft, or intentional world damage.",
-    "No external advertising without approval.",
-    "Report bugs/exploits instead of abusing them.",
+    "Запрещены читы, xray, макросы, дюпы и любые нечестные преимущества.",
+    "Соблюдайте уважительное общение с игроками и администрацией.",
+    "Запрещены гриф, кража и умышленная порча чужих построек.",
+    "Строить базу разрешено только на расстоянии от 1000 блоков от спавна.",
+    "Реклама сторонних проектов запрещена без согласования.",
+    "Найденные баги/эксплойты нужно сообщать администрации, а не использовать.",
 ]
 
 
@@ -296,18 +307,18 @@ def static_response(start_response, content: bytes, content_type: str):
 
 def html_page(title: str, body: str) -> str:
     return f"""<!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{escape(title)}</title>
-  <link rel="stylesheet" href="/static/style.css?v=1" />
+  <link rel="stylesheet" href="/static/style.css?v=2" />
 </head>
 <body>
   <div class="wrap">
     <div class="hero">
       <h1>{escape(APP_TITLE)}</h1>
-      <p>Submit form -> pass mini rules test -> get Telegram review result.</p>
+      <p>Заполни анкету → пройди мини‑тест по правилам → получи решение в Telegram.</p>
     </div>
     {body}
   </div>
@@ -339,60 +350,60 @@ def home_form(error: str = "", values: dict[str, str] | None = None) -> str:
         f"""
         <div class="panel steps">
           <div class="step active">
-            <div><span class="step-number">1</span><span class="step-title">Fill application</span></div>
-            <div class="step-sub">Player fills contact and motivation fields.</div>
+            <div><span class="step-number">1</span><span class="step-title">Заполни анкету</span></div>
+            <div class="step-sub">Укажи ник, контакт и мотивацию.</div>
           </div>
           <div class="step">
-            <div><span class="step-number">2</span><span class="step-title">Pass mini test</span></div>
-            <div class="step-sub">5 questions about basic rules. Pass score is required.</div>
+            <div><span class="step-number">2</span><span class="step-title">Пройди мини‑тест</span></div>
+            <div class="step-sub">6 вопросов по основным правилам сервера.</div>
           </div>
           <div class="step">
-            <div><span class="step-number">3</span><span class="step-title">Telegram review</span></div>
-            <div class="step-sub">Admin approves or rejects from Telegram buttons.</div>
+            <div><span class="step-number">3</span><span class="step-title">Проверка в Telegram</span></div>
+            <div class="step-sub">Админ примет или отклонит заявку кнопкой.</div>
           </div>
         </div>
 
         <div class="panel">
           {error_block}
-          <h2 style="margin-top:0">Staff Application Form</h2>
-          <p class="muted">Complete all fields, then click the big button at the bottom to continue to the mini-test.</p>
+          <h2 style="margin-top:0">Анкета на вступление в команду</h2>
+          <p class="muted">Заполни все поля и нажми большую кнопку внизу, чтобы перейти к мини‑тесту.</p>
           <div class="grid">
             <div>
-              <label>Minecraft Nick</label>
-              <input name="minecraft_nick" form="app-form" placeholder="Example: Yapponecc" value="{escape(values.get("minecraft_nick", ""))}" required />
-              <div class="field-help">Exactly your in-game nickname.</div>
+              <label>Ник в Minecraft</label>
+              <input name="minecraft_nick" form="app-form" placeholder="Пример: Yapponecc" value="{escape(values.get("minecraft_nick", ""))}" required />
+              <div class="field-help">Укажи ник точно как в игре.</div>
             </div>
             <div>
-              <label>Age</label>
+              <label>Возраст</label>
               <input name="age" type="number" min="10" max="99" form="app-form" value="{escape(values.get("age", ""))}" required />
-              <div class="field-help">Allowed range: 10-99.</div>
+              <div class="field-help">Допустимый диапазон: 10-99.</div>
             </div>
             <div>
-              <label>Telegram Contact</label>
-              <input name="telegram_contact" form="app-form" placeholder="@username or id" value="{escape(values.get("telegram_contact", ""))}" required />
-              <div class="field-help">For feedback after moderation.</div>
+              <label>Контакт в Telegram</label>
+              <input name="telegram_contact" form="app-form" placeholder="@username или id" value="{escape(values.get("telegram_contact", ""))}" required />
+              <div class="field-help">Нужен для обратной связи после проверки.</div>
             </div>
             <div>
-              <label>Timezone</label>
+              <label>Часовой пояс</label>
               <input name="timezone_label" form="app-form" placeholder="Europe/Moscow" value="{escape(values.get("timezone_label", ""))}" />
-              <div class="field-help">Optional but useful for scheduling.</div>
+              <div class="field-help">Необязательно, но удобно для связи.</div>
             </div>
             <div class="full">
-              <label>Playtime / Experience</label>
+              <label>Игровой опыт / активность</label>
               <textarea name="playtime" form="app-form" required>{escape(values.get("playtime", ""))}</textarea>
             </div>
             <div class="full">
-              <label>Why do you want to join staff?</label>
+              <label>Почему ты хочешь в команду проекта?</label>
               <textarea name="motivation" form="app-form" required>{escape(values.get("motivation", ""))}</textarea>
             </div>
             <div class="full">
-              <label><input style="width:auto" type="checkbox" name="agree_rules" form="app-form" value="yes" {"checked" if values.get("agree_rules") else ""} /> I read the basic server rules.</label>
+              <label><input style="width:auto" type="checkbox" name="agree_rules" form="app-form" value="yes" {"checked" if values.get("agree_rules") else ""} /> Я прочитал основные правила, включая правило строительства только от 1000 блоков от спавна, и согласен их соблюдать.</label>
             </div>
           </div>
           <ul class="rules">{rules_html}</ul>
-          <div class="hint">After clicking the button, player goes to the mini-test page automatically.</div>
+          <div class="hint">После нажатия кнопки откроется мини‑тест по правилам. Без него заявка не отправляется в проверку.</div>
           <form id="app-form" method="post" action="/apply">
-            <button class="btn big" type="submit">Continue to Mini-Test -></button>
+            <button class="btn big" type="submit">Перейти к мини‑тесту -></button>
           </form>
         </div>
         """,
@@ -411,37 +422,37 @@ def quiz_page(application_id: int, error: str = "") -> str:
                 f'{escape(label)}</label>'
             )
         block = (
-            f'<div class="panel"><h3 style="margin-top:0">Q{index}. {escape(q["question"])}</h3>'
+            f'<div class="panel"><h3 style="margin-top:0">Вопрос {index}. {escape(q["question"])}</h3>'
             f'{"".join(options)}</div>'
         )
         question_blocks.append(block)
 
     body = (
         f'<div class="panel steps">'
-        f'<div class="step"><div><span class="step-number">1</span><span class="step-title">Application done</span></div>'
-        f'<div class="step-sub">Basic form submitted successfully.</div></div>'
-        f'<div class="step active"><div><span class="step-number">2</span><span class="step-title">Mini test now</span></div>'
-        f'<div class="step-sub">Select one answer in each question.</div></div>'
-        f'<div class="step"><div><span class="step-number">3</span><span class="step-title">Telegram review</span></div>'
-        f'<div class="step-sub">Starts only if test is passed.</div></div></div>'
-        f'<div class="panel">{error_block}<h2 style="margin-top:0">Mini Rule-Test</h2>'
-        f'<p class="muted">Pass score: {MIN_PASS_SCORE}/{len(QUIZ_QUESTIONS)}. '
-        f'Only passed applications go to Telegram moderation.</p>'
-        f'<div class="hint">Tip: answer all questions before pressing the final button below.</div></div>'
+        f'<div class="step"><div><span class="step-number">1</span><span class="step-title">Анкета отправлена</span></div>'
+        f'<div class="step-sub">Базовая информация сохранена.</div></div>'
+        f'<div class="step active"><div><span class="step-number">2</span><span class="step-title">Мини‑тест</span></div>'
+        f'<div class="step-sub">Выбери по одному ответу в каждом вопросе.</div></div>'
+        f'<div class="step"><div><span class="step-number">3</span><span class="step-title">Проверка в Telegram</span></div>'
+        f'<div class="step-sub">Стартует только при успешном прохождении теста.</div></div></div>'
+        f'<div class="panel">{error_block}<h2 style="margin-top:0">Мини‑тест по правилам</h2>'
+        f'<p class="muted">Проходной балл: {MIN_PASS_SCORE}/{len(QUIZ_QUESTIONS)}. '
+        f'Только прошедшие тест заявки уходят в Telegram на проверку.</p>'
+        f'<div class="hint">Внимательно проверь ответы перед отправкой.</div></div>'
         f'<form method="post" action="/quiz"><input type="hidden" name="id" value="{application_id}" />'
         f'{"".join(question_blocks)}'
-        f'<div class="panel"><button class="btn big" type="submit">Submit Test and Send Application</button></div></form>'
+        f'<div class="panel"><button class="btn big" type="submit">Отправить тест и заявку</button></div></form>'
     )
-    return html_page("Mini Test", body)
+    return html_page("Мини‑тест", body)
 
 
 def status_label(status: str) -> str:
     mapping = {
-        "quiz_pending": "Quiz Pending",
-        "quiz_failed": "Quiz Failed",
-        "pending_review": "Pending Review",
-        "approved": "Approved",
-        "rejected": "Rejected",
+        "quiz_pending": "Ожидает тест",
+        "quiz_failed": "Тест не пройден",
+        "pending_review": "На проверке",
+        "approved": "Одобрено",
+        "rejected": "Отклонено",
     }
     return mapping.get(status, status)
 
@@ -449,59 +460,64 @@ def status_label(status: str) -> str:
 def status_page(row: sqlite3.Row | None) -> str:
     if row is None:
         return html_page(
-            "Status",
-            '<div class="panel"><div class="error">Application not found. Check the status link/id.</div></div>',
+            "Статус",
+            '<div class="panel"><div class="error">Заявка не найдена. Проверь ссылку или id.</div></div>',
         )
 
     status = row["status"]
     score_info = ""
     if row["quiz_score"] is not None and row["quiz_total"] is not None:
-        score_info = f'<p><strong>Quiz score:</strong> {row["quiz_score"]}/{row["quiz_total"]}</p>'
+        score_info = f'<p><strong>Результат теста:</strong> {row["quiz_score"]}/{row["quiz_total"]}</p>'
 
     note = ""
     if status == "quiz_failed":
-        note = (
-            '<div class="error">Mini-test was not passed. Contact admin if retry is allowed.</div>'
-        )
+        note = '<div class="error">Мини‑тест не пройден. Обратись к администрации, если нужна повторная попытка.</div>'
     elif status == "pending_review":
-        note = '<div class="ok">Passed. Application is waiting for Telegram moderator decision.</div>'
+        note = '<div class="ok">Тест пройден. Заявка ожидает решения модератора в Telegram.</div>'
     elif status == "approved":
-        note = '<div class="ok">Approved. Staff team will contact you in Telegram.</div>'
+        note = '<div class="ok">Заявка одобрена. Команда проекта свяжется с тобой в Telegram.</div>'
     elif status == "rejected":
-        note = '<div class="error">Rejected by moderation.</div>'
+        note = '<div class="error">Заявка отклонена модерацией.</div>'
 
     body = f"""
       <div class="panel">
-        <h2 style="margin-top:0">Application #{row['id']}</h2>
-        <p><strong>Minecraft nick:</strong> {escape(row['minecraft_nick'])}</p>
-        <p><strong>Status:</strong> <span class="status-pill {escape(status)}">{escape(status_label(status))}</span></p>
+        <h2 style="margin-top:0">Заявка #{row['id']}</h2>
+        <p><strong>Ник Minecraft:</strong> {escape(row['minecraft_nick'])}</p>
+        <p><strong>Статус:</strong> <span class="status-pill {escape(status)}">{escape(status_label(status))}</span></p>
         {score_info}
         {note}
-        <div class="hint">Keep this page link - status updates here automatically after decision.</div>
+        <div class="hint">Сохрани эту ссылку: статус автоматически обновится после решения модерации.</div>
       </div>
     """
-    return html_page("Application status", body)
+    return html_page("Статус заявки", body)
 
 
 def validate_application_form(data: dict[str, str]) -> tuple[bool, str]:
     required_fields = ["minecraft_nick", "age", "telegram_contact", "playtime", "motivation"]
+    field_names = {
+        "minecraft_nick": "Ник в Minecraft",
+        "age": "Возраст",
+        "telegram_contact": "Контакт в Telegram",
+        "playtime": "Игровой опыт / активность",
+        "motivation": "Почему ты хочешь в команду проекта",
+    }
     for field in required_fields:
         if not data.get(field, "").strip():
-            return False, f"Field '{field}' is required."
+            return False, f"Поле «{field_names.get(field, field)}» обязательно для заполнения."
 
     if data.get("agree_rules") != "yes":
-        return False, "You must confirm that rules are read."
+        return False, "Подтверди, что ты прочитал правила."
 
     try:
         age = int(data["age"])
     except ValueError:
-        return False, "Age must be a valid number."
+        return False, "Возраст должен быть числом."
 
     if age < 10 or age > 99:
-        return False, "Age must be between 10 and 99."
+        return False, "Возраст должен быть в диапазоне от 10 до 99."
 
     if len(data.get("minecraft_nick", "")) > 32:
-        return False, "Minecraft nick is too long."
+        return False, "Ник Minecraft слишком длинный."
 
     return True, ""
 
@@ -541,28 +557,28 @@ def telegram_enabled() -> bool:
 
 def format_application_message(row: sqlite3.Row) -> str:
     lines = [
-        f"<b>New application #{row['id']}</b>",
+        f"<b>Новая заявка #{row['id']}</b>",
         "",
-        f"<b>Minecraft:</b> {escape(row['minecraft_nick'])}",
-        f"<b>Age:</b> {row['age']}",
+        f"<b>Ник Minecraft:</b> {escape(row['minecraft_nick'])}",
+        f"<b>Возраст:</b> {row['age']}",
         f"<b>Telegram:</b> {escape(row['telegram_contact'])}",
     ]
     if row["timezone_label"]:
-        lines.append(f"<b>Timezone:</b> {escape(row['timezone_label'])}")
+        lines.append(f"<b>Часовой пояс:</b> {escape(row['timezone_label'])}")
     lines.extend(
         [
             "",
-            "<b>Playtime / Experience</b>",
+            "<b>Игровой опыт / активность</b>",
             escape(row["playtime"]),
             "",
-            "<b>Motivation</b>",
+            "<b>Мотивация</b>",
             escape(row["motivation"]),
             "",
-            f"<b>Quiz:</b> {row['quiz_score']}/{row['quiz_total']}",
+            f"<b>Тест:</b> {row['quiz_score']}/{row['quiz_total']}",
         ]
     )
     if PUBLIC_BASE_URL:
-        lines.append(f"\n<b>Status page:</b> {escape(PUBLIC_BASE_URL)}/status?id={row['id']}")
+        lines.append(f"\n<b>Страница статуса:</b> {escape(PUBLIC_BASE_URL)}/status?id={row['id']}")
     return "\n".join(lines)
 
 
@@ -581,8 +597,8 @@ def send_application_to_telegram(application_id: int) -> None:
         "reply_markup": {
             "inline_keyboard": [
                 [
-                    {"text": "✅ Approve", "callback_data": f"approve:{application_id}"},
-                    {"text": "❌ Reject", "callback_data": f"reject:{application_id}"},
+                    {"text": "✅ Одобрить", "callback_data": f"approve:{application_id}"},
+                    {"text": "❌ Отклонить", "callback_data": f"reject:{application_id}"},
                 ]
             ]
         },
@@ -598,13 +614,13 @@ def send_application_to_telegram(application_id: int) -> None:
 
 
 def format_reviewed_message(row: sqlite3.Row) -> str:
-    status = "APPROVED" if row["status"] == "approved" else "REJECTED"
-    mod = row["decision_by"] or "unknown"
+    status = "ОДОБРЕНО" if row["status"] == "approved" else "ОТКЛОНЕНО"
+    mod = row["decision_by"] or "неизвестно"
     return (
-        f"<b>Application #{row['id']} — {status}</b>\n\n"
-        f"<b>Minecraft:</b> {escape(row['minecraft_nick'])}\n"
-        f"<b>Quiz:</b> {row['quiz_score']}/{row['quiz_total']}\n"
-        f"<b>Moderator:</b> {escape(mod)}"
+        f"<b>Заявка #{row['id']} — {status}</b>\n\n"
+        f"<b>Ник Minecraft:</b> {escape(row['minecraft_nick'])}\n"
+        f"<b>Тест:</b> {row['quiz_score']}/{row['quiz_total']}\n"
+        f"<b>Модератор:</b> {escape(mod)}"
     )
 
 
@@ -623,7 +639,7 @@ def handle_callback(callback_query: dict[str, Any]) -> None:
     if chat_id != str(TELEGRAM_ADMIN_CHAT_ID):
         telegram_api_call(
             "answerCallbackQuery",
-            {"callback_query_id": callback_id, "text": "Not allowed here.", "show_alert": False},
+            {"callback_query_id": callback_id, "text": "Эта кнопка доступна только в админ-чате.", "show_alert": False},
         )
         return
 
@@ -631,7 +647,7 @@ def handle_callback(callback_query: dict[str, Any]) -> None:
     if action not in {"approve", "reject"} or not raw_id.isdigit():
         telegram_api_call(
             "answerCallbackQuery",
-            {"callback_query_id": callback_id, "text": "Invalid action.", "show_alert": False},
+            {"callback_query_id": callback_id, "text": "Некорректное действие.", "show_alert": False},
         )
         return
 
@@ -640,7 +656,7 @@ def handle_callback(callback_query: dict[str, Any]) -> None:
     if not changed:
         telegram_api_call(
             "answerCallbackQuery",
-            {"callback_query_id": callback_id, "text": "Already reviewed.", "show_alert": False},
+            {"callback_query_id": callback_id, "text": "Эта заявка уже была рассмотрена.", "show_alert": False},
         )
         return
 
@@ -658,7 +674,7 @@ def handle_callback(callback_query: dict[str, Any]) -> None:
 
     telegram_api_call(
         "answerCallbackQuery",
-        {"callback_query_id": callback_id, "text": "Saved.", "show_alert": False},
+        {"callback_query_id": callback_id, "text": "Решение сохранено.", "show_alert": False},
     )
 
 
@@ -698,7 +714,7 @@ def app(environ: dict[str, Any], start_response):
             return response(
                 start_response,
                 "404 Not Found",
-                html_page("Not found", '<div class="panel"><div class="error">Static file not found.</div></div>'),
+                html_page("Не найдено", '<div class="panel"><div class="error">Статический файл не найден.</div></div>'),
             )
         content_type = "application/octet-stream"
         if rel.endswith(".css"):
@@ -727,7 +743,7 @@ def app(environ: dict[str, Any], start_response):
         params = query_params(environ)
         raw_id = params.get("id", "")
         if not raw_id.isdigit():
-            return response(start_response, "400 Bad Request", quiz_page(0, error="Invalid application id."))
+            return response(start_response, "400 Bad Request", quiz_page(0, error="Некорректный id заявки."))
         app_id = int(raw_id)
         row = get_application(app_id)
         if row is None:
@@ -740,7 +756,7 @@ def app(environ: dict[str, Any], start_response):
         data = parse_body(environ)
         raw_id = data.get("id", "")
         if not raw_id.isdigit():
-            return response(start_response, "400 Bad Request", quiz_page(0, error="Invalid application id."))
+            return response(start_response, "400 Bad Request", quiz_page(0, error="Некорректный id заявки."))
 
         app_id = int(raw_id)
         row = get_application(app_id)
@@ -769,7 +785,7 @@ def app(environ: dict[str, Any], start_response):
     return response(
         start_response,
         "404 Not Found",
-        html_page("Not found", '<div class="panel"><div class="error">Page not found.</div></div>'),
+        html_page("Не найдено", '<div class="panel"><div class="error">Страница не найдена.</div></div>'),
     )
 
 
