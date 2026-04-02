@@ -50,6 +50,298 @@ STATIC_DIR = BASE_DIR / "static"
 MIN_PASS_SCORE = 5
 RESOLVED_DB_PATH = ""
 
+INLINE_CSS = """
+:root {
+  --bg-deep: #090f1a;
+  --bg-mid: #101b2b;
+  --bg-soft: #152a41;
+  --panel: rgba(16, 29, 45, 0.72);
+  --panel-border: rgba(255, 255, 255, 0.1);
+  --text: #f2f7ff;
+  --text-muted: #b8c9dd;
+  --accent: #ffd166;
+  --accent-2: #4ed6c8;
+  --danger: #ff6b6b;
+  --ok: #57cc99;
+  --field-bg: rgba(8, 16, 28, 0.62);
+  --field-border: rgba(150, 182, 219, 0.35);
+  --shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+  min-height: 100vh;
+  padding: 26px;
+  background:
+    radial-gradient(circle at 18% 8%, #2f4f75 0%, transparent 34%),
+    radial-gradient(circle at 86% 14%, #2b6f77 0%, transparent 30%),
+    radial-gradient(circle at 48% 88%, #493060 0%, transparent 28%),
+    linear-gradient(160deg, var(--bg-soft) 0%, var(--bg-mid) 44%, var(--bg-deep) 100%);
+}
+
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.hero {
+  margin-bottom: 20px;
+  background: linear-gradient(120deg, rgba(255, 209, 102, 0.15), rgba(78, 214, 200, 0.11));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(4px);
+}
+
+.hero h1 {
+  margin: 0 0 6px;
+  font-size: 34px;
+  letter-spacing: 0.25px;
+}
+
+.hero p {
+  margin: 0;
+  color: #d4e4f5;
+  line-height: 1.45;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(5px);
+}
+
+.step {
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.step.active {
+  background: linear-gradient(145deg, rgba(255, 209, 102, 0.2), rgba(78, 214, 200, 0.15));
+  border-color: rgba(255, 209, 102, 0.45);
+}
+
+.step-number {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-weight: 800;
+  color: #132236;
+  margin-right: 7px;
+  background: linear-gradient(135deg, var(--accent), #ffb347);
+}
+
+.step-title {
+  font-weight: 800;
+  font-size: 14px;
+  color: #f6fbff;
+}
+
+.step-sub {
+  margin-top: 6px;
+  color: #c7d8eb;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+  backdrop-filter: blur(5px);
+}
+
+.panel h2,
+.panel h3 {
+  color: #f7fbff;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #bdd1e6;
+  display: block;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--field-border);
+  font-size: 14px;
+  font-family: inherit;
+  color: #f2f7ff;
+  background: var(--field-bg);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: rgba(255, 209, 102, 0.9);
+  box-shadow: 0 0 0 3px rgba(255, 209, 102, 0.18);
+}
+
+.field-help {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #9eb3c9;
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.rules {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: #c5d6ea;
+  line-height: 1.5;
+}
+
+.btn {
+  background: linear-gradient(135deg, var(--accent), #ffb347);
+  color: #1e1500;
+  border: 0;
+  padding: 11px 16px;
+  border-radius: 11px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.btn.big {
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 16px;
+  border-radius: 12px;
+}
+
+.btn:hover {
+  filter: brightness(1.02);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.error {
+  border-left: 4px solid var(--danger);
+  background: rgba(255, 107, 107, 0.16);
+  color: #ffe3e3;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.ok {
+  border-left: 4px solid var(--ok);
+  background: rgba(87, 204, 153, 0.18);
+  color: #eafff3;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #fff;
+  background: #607388;
+}
+
+.status-pill.pending_review {
+  background: #d79b22;
+  color: #1f1400;
+}
+
+.status-pill.approved {
+  background: #1fa95f;
+}
+
+.status-pill.rejected,
+.status-pill.quiz_failed {
+  background: #d64545;
+}
+
+.hint {
+  background: rgba(78, 214, 200, 0.13);
+  border: 1px solid rgba(78, 214, 200, 0.36);
+  color: #dcfffa;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-top: 10px;
+  line-height: 1.45;
+}
+
+@media (max-width: 760px) {
+  body {
+    padding: 16px;
+  }
+
+  .steps {
+    grid-template-columns: 1fr;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h1 {
+    font-size: 27px;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+}
+"""
+
 QUIZ_QUESTIONS = [
     {
         "id": "q1",
@@ -308,11 +600,11 @@ def static_response(start_response, content: bytes, content_type: str):
 def html_page(title: str, body: str) -> str:
     return f"""<!doctype html>
 <html lang="ru">
-<head> 
-  <meta charset="utf-8" /> 
+<head>
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{escape(title)}</title>
-  <link rel="stylesheet" href="/static/style.css?v=3" />
+  <style>{INLINE_CSS}</style>
 </head>
 <body>
   <div class="wrap">
