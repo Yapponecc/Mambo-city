@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+applications.db
+applications.db-journal
+*.sqlite
+*.sqlite3
